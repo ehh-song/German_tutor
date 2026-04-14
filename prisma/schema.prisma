@@ -1,0 +1,112 @@
+// German Learning App - Prisma Schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  progress        UserProgress?
+  passages        Passage[]
+  attempts        PassageAttempt[]
+  vocabularyWords VocabularyWord[]
+  levelUpTests    LevelUpTest[]
+}
+
+model UserProgress {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  currentLevel   String    @default("A1")
+  xp             Int       @default(0)
+  totalPassages  Int       @default(0)
+  streakDays     Int       @default(0)
+  lastActivityAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Passage {
+  id           String   @id @default(cuid())
+  userId       String
+  level        String
+  germanText   String
+  topic        String
+  grammarFocus String
+  wordListJson String   @default("[]")
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions       Question[]
+  attempts        PassageAttempt[]
+  vocabularyWords VocabularyWord[]
+}
+
+model Question {
+  id            String @id @default(cuid())
+  passageId     String
+  type          String
+  questionText  String
+  options       String
+  correctAnswer String
+  explanation   String
+  orderIndex    Int
+
+  passage Passage @relation(fields: [passageId], references: [id], onDelete: Cascade)
+}
+
+model PassageAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  passageId   String
+  answers     String
+  score       Int
+  xpEarned    Int
+  completedAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage @relation(fields: [passageId], references: [id], onDelete: Cascade)
+}
+
+model VocabularyWord {
+  id           String    @id @default(cuid())
+  userId       String
+  passageId    String
+  germanWord   String
+  translation  String
+  explanation  String
+  partOfSpeech String?
+  savedAt      DateTime  @default(now())
+  reviewCount  Int       @default(0)
+  lastReviewAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage @relation(fields: [passageId], references: [id], onDelete: Cascade)
+}
+
+model LevelUpTest {
+  id        String    @id @default(cuid())
+  userId    String
+  fromLevel String
+  toLevel   String
+  questions String
+  score     Int?
+  passed    Boolean?
+  takenAt   DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
