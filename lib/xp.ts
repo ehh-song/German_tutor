@@ -1,11 +1,13 @@
 export const XP_LEVEL_UP_BONUS = 200;
 export const XP_VOCAB_SAVE = 2;
+export const XP_PER_CORRECT = 2;
+export const XP_PERFECT_BONUS = 5;
 
-export function calculatePassageXP(score: number): number {
-  if (score === 100) return 50;
-  if (score >= 80) return 35;
-  if (score >= 60) return 20;
-  return 10;
+/** 문제당 2XP, 전부 맞추면 +5XP 보너스 */
+export function calculatePassageXP(correctAnswers: number, totalQuestions: number): number {
+  const base = correctAnswers * XP_PER_CORRECT;
+  const bonus = correctAnswers === totalQuestions ? XP_PERFECT_BONUS : 0;
+  return base + bonus;
 }
 
 export function calculateScore(

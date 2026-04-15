@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { calculateScore, calculatePassageXP, XP_LEVEL_UP_BONUS } from "@/lib/xp";
+import { calculateScore, calculatePassageXP } from "@/lib/xp";
 import { isLevelUpAvailable, type CEFRLevel } from "@/lib/levels";
 
 export async function POST(
@@ -30,7 +30,11 @@ export async function POST(
     passage.questions.map((q) => ({ id: q.id, correctAnswer: q.correctAnswer }))
   );
 
-  const xpEarned = calculatePassageXP(score);
+  const correctAnswers = passage.questions.filter(
+    (q) => answers[q.id] === q.correctAnswer
+  ).length;
+
+  const xpEarned = calculatePassageXP(correctAnswers, passage.questions.length);
 
   await prisma.passageAttempt.create({
     data: {
@@ -79,7 +83,7 @@ export async function POST(
   return NextResponse.json({
     score,
     xpEarned,
-    correctAnswers: passage.questions.filter((q) => answers[q.id] === q.correctAnswer).length,
+    correctAnswers,
     totalQuestions: passage.questions.length,
     explanations,
     levelUpAvailable,
