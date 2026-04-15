@@ -76,12 +76,13 @@ export function usePassageStream() {
           try {
             const event = JSON.parse(data);
             if (event.type === "chunk") {
-              setState((s) => ({ ...s, text: s.text + event.text }));
+              // Accumulate raw chunks but don't display them (they're raw JSON)
             } else if (event.type === "done") {
               setState((s) => ({
                 ...s,
                 streaming: false,
                 done: true,
+                text: event.germanText ?? s.text,
                 passageId: event.passageId,
                 topic: event.topic,
                 grammarFocus: event.grammarFocus,

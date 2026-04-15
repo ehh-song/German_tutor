@@ -82,18 +82,16 @@ export default function LearnPage() {
 
           {/* Passage text */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            {streaming && !done && (
-              <div className="mb-2 flex items-center gap-2">
-                <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            {streaming && !done ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-4">
+                <div className="flex gap-2">
+                  <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
-                <span className="text-xs text-gray-400">Generating passage...</span>
+                <span className="text-sm text-gray-400">AI가 문단을 생성하고 있습니다...</span>
               </div>
-            )}
-
-            {done && passageId ? (
+            ) : done && passageId ? (
               <>
                 <PassageReader
                   text={text}
@@ -101,15 +99,10 @@ export default function LearnPage() {
                   wordList={wordList}
                 />
                 <p className="text-xs text-gray-400 mt-4">
-                  Click on any word to see its translation. Save words to your vocabulary book.
+                  단어를 클릭하면 번역이 표시됩니다. 단어장에 저장할 수 있어요.
                 </p>
               </>
-            ) : (
-              <div className="text-lg leading-8 text-gray-800 whitespace-pre-wrap font-serif">
-                {text}
-                {streaming && <span className="inline-block w-0.5 h-5 bg-indigo-500 animate-pulse ml-0.5 align-middle" />}
-              </div>
-            )}
+            ) : null}
           </div>
 
           {/* Questions */}

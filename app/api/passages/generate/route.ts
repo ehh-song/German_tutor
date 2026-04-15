@@ -57,6 +57,7 @@ export async function POST(request: Request) {
                 `data: ${JSON.stringify({
                   type: "done",
                   passageId: passage.id,
+                  germanText: passage.germanText,
                   topic: passage.topic,
                   grammarFocus: passage.grammarFocus,
                   wordList: event.data.wordList,
