@@ -6,10 +6,10 @@
 - Next.js 16 (App Router, TypeScript), Tailwind CSS
 - Prisma 7 + SQLite (better-sqlite3 driver adapter)
 - NextAuth v5 (credentials, JWT)
-- Anthropic SDK: Opus 4.6 (passages + level-up tests), Haiku 4.5 (word translation)
+- Google Generative AI SDK: Gemini 2.0 Flash (passages, level-up tests, word translation)
 
 ## Key files
-- `lib/anthropic.ts` — AI calls (streaming, prompt caching via beta.messages)
+- `lib/ai.ts` — AI calls via Gemini 2.0 Flash (streaming + non-streaming)
 - `lib/prompts.ts` — CEFR system prompt + user prompt builders
 - `lib/schemas.ts` — Zod schemas for Claude output validation
 - `lib/levels.ts` — LEVEL_CONFIG, XP thresholds, nextLevel()
@@ -40,7 +40,7 @@ GET/POST /api/vocabulary, DELETE /api/vocabulary/[id]
 GET  /api/levelup/status, POST /api/levelup/generate, GET/POST /api/levelup/[id]
 
 ## Env vars needed (.env.local)
-ANTHROPIC_API_KEY, NEXTAUTH_SECRET, NEXTAUTH_URL, DATABASE_URL="file:./dev.db"
+GOOGLE_AI_API_KEY, NEXTAUTH_SECRET, NEXTAUTH_URL, DATABASE_URL="file:./dev.db"
 
 ## Known issues / TODO
 - Local PC에서 `npx prisma migrate dev` 시 DATABASE_URL 에러 발생

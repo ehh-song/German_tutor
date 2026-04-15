@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { translateWord } from "@/lib/anthropic";
+import { translateWord } from "@/lib/ai";
 import { XP_VOCAB_SAVE } from "@/lib/xp";
 
 export async function GET(request: Request) {

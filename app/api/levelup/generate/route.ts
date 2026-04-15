@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { generateLevelUpTest } from "@/lib/anthropic";
+import { generateLevelUpTest } from "@/lib/ai";
 import { isLevelUpAvailable, nextLevel, type CEFRLevel } from "@/lib/levels";
 
 export async function POST() {

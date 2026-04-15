@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { streamPassageGeneration } from "@/lib/anthropic";
+import { streamPassageGeneration } from "@/lib/ai";
 import { LEVEL_CONFIG, type CEFRLevel } from "@/lib/levels";
 
 export async function POST(request: Request) {
