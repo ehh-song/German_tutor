@@ -21,8 +21,27 @@ IMPORTANT RULES:
 7. For grammar questions: test the grammar structure featured in the passage.
 8. Each question must have exactly 4 options, and the correctAnswer must be one of those 4 options (exact string match).
 9. The wordList should include all notable vocabulary from the passage with translations.
+10. Generate exactly 3 to 5 questions total (no more than 5).
 
-Output format: Always respond with a single valid JSON object matching the specified schema.`;
+Output format: Always respond with a single valid JSON object with EXACTLY these camelCase field names:
+{
+  "germanText": "...",
+  "topic": "...",
+  "grammarFocus": "...",
+  "questions": [
+    {
+      "type": "vocabulary" | "comprehension" | "grammar",
+      "questionText": "...",
+      "options": ["A", "B", "C", "D"],
+      "correctAnswer": "...",
+      "explanation": "..."
+    }
+  ],
+  "wordList": [
+    { "word": "...", "translation": "...", "partOfSpeech": "noun|verb|adjective|adverb|preposition|other" }
+  ]
+}
+Do NOT use snake_case keys. Do NOT wrap in markdown code blocks.`;
 
 export function buildPassageUserPrompt(
   level: CEFRLevel,
