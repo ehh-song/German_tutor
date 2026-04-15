@@ -55,6 +55,7 @@ const cachedLevelUpSystemBlock: BetaTextBlockParam = {
  */
 export async function* streamPassageGeneration(
   level: CEFRLevel,
+  xpProgress: number,
   topic?: string
 ): AsyncGenerator<{ type: "chunk"; text: string } | { type: "done"; data: PassageGeneration }> {
   const stream = anthropic.beta.messages.stream({
@@ -64,7 +65,7 @@ export async function* streamPassageGeneration(
     messages: [
       {
         role: "user",
-        content: buildPassageUserPrompt(level, topic),
+        content: buildPassageUserPrompt(level, xpProgress, topic),
       },
     ],
     betas: ["prompt-caching-2024-07-31"],

@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { streamPassageGeneration } from "@/lib/anthropic";
-import type { CEFRLevel } from "@/lib/levels";
+import { LEVEL_CONFIG, type CEFRLevel } from "@/lib/levels";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -16,6 +16,10 @@ export async function POST(request: Request) {
   });
 
   const level = (progress?.currentLevel ?? "A1") as CEFRLevel;
+  const xp = progress?.xp ?? 0;
+  const xpThreshold = LEVEL_CONFIG[level].xpToUnlockTest ?? 1;
+  // 0.0 ~ 1.0: progress within the current level
+  const xpProgress = Math.min(1, xp / xpThreshold);
 
   const userId = session.user.id;
   const encoder = new TextEncoder();
@@ -23,13 +27,12 @@ export async function POST(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of streamPassageGeneration(level, topic)) {
+        for await (const event of streamPassageGeneration(level, xpProgress, topic)) {
           if (event.type === "chunk") {
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "chunk", text: event.text })}\n\n`)
             );
           } else if (event.type === "done") {
-            // Persist to DB
             const passage = await prisma.passage.create({
               data: {
                 userId,

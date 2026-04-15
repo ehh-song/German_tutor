@@ -9,14 +9,13 @@ import type { AttemptResult } from "@/types";
 
 export default function LearnPage() {
   const router = useRouter();
-  const [topic, setTopic] = useState("");
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
   const { streaming, text, passageId, topic: generatedTopic, grammarFocus, wordList, questions, error, done, generate, reset } =
     usePassageStream();
 
   function handleGenerate() {
     setAttemptResult(null);
-    generate(topic.trim() || undefined);
+    generate();
   }
 
   function handleComplete(result: AttemptResult) {
@@ -26,7 +25,6 @@ export default function LearnPage() {
   function handleNewPassage() {
     reset();
     setAttemptResult(null);
-    setTopic("");
   }
 
   return (
@@ -37,28 +35,18 @@ export default function LearnPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
           <div className="text-5xl mb-4">📖</div>
           <h3 className="text-xl font-semibold text-gray-800 mb-2">
-            Generate a German Passage
+            독일어 문단 생성
           </h3>
           <p className="text-gray-500 mb-6">
-            An AI-generated passage tailored to your current level will appear, with comprehension questions.
+            현재 레벨과 학습 진도에 맞는 독일어 문단이 자동으로 생성됩니다.
           </p>
 
-          <div className="flex gap-3 max-w-md mx-auto">
-            <input
-              type="text"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Topic (optional, e.g. Familie, Reisen)"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
-              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-            />
-            <button
-              onClick={handleGenerate}
-              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition"
-            >
-              Generate
-            </button>
-          </div>
+          <button
+            onClick={handleGenerate}
+            className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition text-lg"
+          >
+            문단 생성하기
+          </button>
 
           {error && (
             <div className="mt-4 text-red-500 text-sm">{error}</div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { WordItem } from "@/types";
 
 interface Props {
@@ -14,6 +14,7 @@ export default function WordTooltip({ word, passageId, wordListEntry, passageCon
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const containerRef = useRef<HTMLSpanElement>(null);
   const [translation, setTranslation] = useState<{
     translation: string;
     explanation: string;
@@ -24,12 +25,23 @@ export default function WordTooltip({ word, passageId, wordListEntry, passageCon
     partOfSpeech: wordListEntry.partOfSpeech,
   } : null);
 
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handleOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [open]);
+
   async function handleClick(e: React.MouseEvent) {
     e.stopPropagation();
     setOpen((o) => !o);
 
     if (!translation && !wordListEntry) {
-      // Fetch from vocabulary API (will call Haiku if not in wordList)
       setSaving(true);
       const res = await fetch("/api/vocabulary", {
         method: "POST",
@@ -66,14 +78,12 @@ export default function WordTooltip({ word, passageId, wordListEntry, passageCon
       }),
     });
 
-    if (res.ok) {
-      setSaved(true);
-    }
+    if (res.ok) setSaved(true);
     setSaving(false);
   }
 
   return (
-    <span className="relative inline-block">
+    <span className="relative inline-block" ref={containerRef}>
       <span
         onClick={handleClick}
         className="cursor-pointer hover:bg-indigo-100 hover:text-indigo-800 rounded px-0.5 transition"
@@ -83,7 +93,7 @@ export default function WordTooltip({ word, passageId, wordListEntry, passageCon
 
       {open && (
         <div
-          className="absolute z-50 bottom-full left-0 mb-1 w-64 bg-white rounded-xl shadow-xl border border-gray-200 p-3"
+          className="absolute z-50 top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-200 p-3"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between mb-1">
@@ -114,10 +124,10 @@ export default function WordTooltip({ word, passageId, wordListEntry, passageCon
                   disabled={saving}
                   className="mt-2 w-full text-xs bg-indigo-500 hover:bg-indigo-600 text-white py-1 rounded-lg transition disabled:opacity-50"
                 >
-                  {saving ? "Saving..." : "Save to Vocabulary"}
+                  {saving ? "Saving..." : "단어장에 저장"}
                 </button>
               ) : (
-                <div className="mt-2 text-xs text-green-600 text-center">Saved to vocabulary</div>
+                <div className="mt-2 text-xs text-green-600 text-center">단어장에 저장됨 ✓</div>
               )}
             </>
           ) : null}

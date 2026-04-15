@@ -13,7 +13,7 @@ CEFR Grammar Guidelines by Level:
 
 IMPORTANT RULES:
 1. The German passage must be approximately 100 words long.
-2. Use ONLY grammar structures appropriate for the specified level.
+2. Use ONLY grammar structures appropriate for the specified level AND difficulty.
 3. The passage should be interesting and tell a coherent story or describe a scenario.
 4. Questions must test understanding of the passage content, vocabulary, AND grammar structures used.
 5. For vocabulary questions: test words used in the passage.
@@ -43,36 +43,109 @@ Output format: Always respond with a single valid JSON object with EXACTLY these
 }
 Do NOT use snake_case keys. Do NOT wrap in markdown code blocks.`;
 
+// Topic pools per level — early topics are simpler, later topics are more complex
+const TOPIC_POOLS: Record<CEFRLevel, string[][]> = {
+  A1: [
+    ["Familie", "Begrüßung", "Zahlen", "Farben", "Wochentage"],        // early
+    ["Essen und Trinken", "Wohnen", "Kleidung", "Tiere", "Schule"],     // mid
+    ["Alltag", "Einkaufen", "Hobbys", "Das Wetter", "Mein Zimmer"],    // late
+  ],
+  A2: [
+    ["Reisen", "Stadtbeschreibung", "Im Restaurant", "Berufe", "Familie und Freunde"],
+    ["Freizeit", "Gesundheit", "Einkaufen in der Stadt", "Jahreszeiten", "Sport"],
+    ["Arbeit und Schule", "Öffentliche Verkehrsmittel", "Feste und Feiertage", "Urlaubspläne", "Haushalt"],
+  ],
+  B1: [
+    ["Umwelt und Natur", "Technologie im Alltag", "Bildung", "Reiseerlebnisse", "Sport und Fitness"],
+    ["Kultur und Traditionen", "Medien und Kommunikation", "Stadtleben vs. Landleben", "Gesundheit und Ernährung", "Arbeitswelt"],
+    ["Globalisierung", "Jugendkultur", "Nachhaltigkeit", "Geschichte Deutschlands", "Soziale Netzwerke"],
+  ],
+  B2: [
+    ["Politik und Gesellschaft", "Wirtschaft und Finanzen", "Wissenschaft und Technik", "Kulturelle Unterschiede", "Umweltprobleme"],
+    ["Medien und Journalismus", "Bildungssystem", "Migration und Integration", "Philosophische Fragen", "Zukunft der Arbeit"],
+    ["Literatur und Kunst", "Ethik und Moral", "Internationale Politik", "Wirtschaftskrise", "Digitale Transformation"],
+  ],
+  C1: [
+    ["Ethik und Moral", "Globalisierung", "Kunst und Literatur", "Medien und Manipulation", "Geschichte und Erinnerung"],
+    ["Sprachpolitik", "Gesellschaftlicher Wandel", "Philosophie des Geistes", "Wissenschaftsethik", "Demokratie und Freiheit"],
+    ["Postmoderne Literatur", "Interkulturelle Kommunikation", "Technologiefolgen", "Komplexe Wirtschaftsfragen", "Identität und Zugehörigkeit"],
+  ],
+  C2: [
+    ["Sprachphilosophie", "Abstrakte gesellschaftliche Konzepte", "Literarische Analyse", "Komplexe Kausalitäten", "Erkenntnistheorie"],
+    ["Politische Theorie", "Ästhetik", "Wissenschaftsphilosophie", "Diskursanalyse", "Kulturkritik"],
+    ["Hermeneutik", "Tiefgründige ethische Dilemmata", "Poststrukturalismus", "Komparative Kulturwissenschaft", "Komplexe historische Interpretationen"],
+  ],
+};
+
+// Difficulty modifier descriptions for the prompt
+const DIFFICULTY_HINTS: Record<string, string> = {
+  easy: "Use the simplest vocabulary and sentence structures appropriate for this level. Prefer very short sentences.",
+  medium: "Use standard vocabulary and sentence structures for this level. Mix simple and slightly complex sentences.",
+  hard: "Push toward the upper boundary of this level. Use more complex vocabulary and sentence structures. Sentences may be longer and more varied.",
+};
+
+function getDifficultyTier(xpProgress: number): "easy" | "medium" | "hard" {
+  if (xpProgress < 0.33) return "easy";
+  if (xpProgress < 0.67) return "medium";
+  return "hard";
+}
+
+function getTopicTier(xpProgress: number): number {
+  if (xpProgress < 0.33) return 0;
+  if (xpProgress < 0.67) return 1;
+  return 2;
+}
+
 export function buildPassageUserPrompt(
   level: CEFRLevel,
+  xpProgress: number, // 0.0 ~ 1.0: how far through the level the user is
   topic?: string
 ): string {
-  const grammarFocusMap: Record<CEFRLevel, string[]> = {
-    A1: ["Präsens", "sein/haben", "basic nouns and articles"],
-    A2: ["Perfekt", "Modal verbs", "Dative/Accusative prepositions"],
-    B1: ["Präteritum", "Reflexive verbs", "Relative clauses"],
-    B2: ["Konjunktiv II", "Passiv", "Complex relative clauses"],
-    C1: ["Konjunktiv I", "Partizipialkonstruktionen", "Erweiterte Nominalgruppen"],
-    C2: ["Complex subordination", "Literary constructions", "Register variation"],
+  const grammarFocusMap: Record<CEFRLevel, string[][]> = {
+    A1: [
+      ["Präsens", "sein/haben", "basic nouns and articles"],
+      ["Präsens", "Nominativ/Akkusativ", "basic adjectives"],
+      ["Präsens", "Possessivartikel", "Verneinung mit nicht/kein"],
+    ],
+    A2: [
+      ["Perfekt with haben", "basic modal verbs", "simple prepositions"],
+      ["Perfekt with sein", "Modal verbs (können, müssen, wollen)", "Dative prepositions"],
+      ["Perfekt", "dass/weil subordinate clauses", "Akkusativ/Dativ prepositions"],
+    ],
+    B1: [
+      ["Präteritum (common verbs)", "basic relative clauses", "separable verbs"],
+      ["Präteritum", "Reflexive verbs", "Relative clauses"],
+      ["Futur I", "Passiv (basic)", "complex relative clauses"],
+    ],
+    B2: [
+      ["Konjunktiv II (basics)", "Passiv", "two-way prepositions"],
+      ["Konjunktiv II", "Vorgangs- und Zustandspassiv", "extended attributes"],
+      ["Konjunktiv II (complex)", "complex Passiv constructions", "Infinitivkonstruktionen"],
+    ],
+    C1: [
+      ["Konjunktiv I (reported speech)", "basic Partizipialkonstruktionen", "academic register"],
+      ["Konjunktiv I", "Partizipialkonstruktionen", "Erweiterte Nominalgruppen"],
+      ["Konjunktiv I + II combined", "complex Partizipialkonstruktionen", "idiomatic expressions"],
+    ],
+    C2: [
+      ["Complex subordination", "literary constructions", "formal register"],
+      ["Complex subordination", "stylistic variation", "rare collocations"],
+      ["All tenses and moods combined", "literary and rhetorical devices", "register variation"],
+    ],
   };
 
-  const topicSuggestions: Record<CEFRLevel, string[]> = {
-    A1: ["Familie", "Essen und Trinken", "Wohnen", "Alltag", "Einkaufen"],
-    A2: ["Reisen", "Arbeit", "Freizeit", "Gesundheit", "Stadt und Land"],
-    B1: ["Umwelt", "Technologie", "Kultur", "Sport", "Bildung"],
-    B2: ["Politik", "Wirtschaft", "Wissenschaft", "Gesellschaft", "Philosophie"],
-    C1: ["Ethik und Moral", "Globalisierung", "Kunst und Literatur", "Medien", "Geschichte"],
-    C2: ["Sprachphilosophie", "Komplexe gesellschaftliche Themen", "Abstrakte Konzepte"],
-  };
-
-  const selectedTopic =
-    topic || topicSuggestions[level][Math.floor(Math.random() * topicSuggestions[level].length)];
-
-  const grammarFocus = grammarFocusMap[level].join(", ");
+  const tier = getTopicTier(xpProgress);
+  const difficulty = getDifficultyTier(xpProgress);
+  const topics = TOPIC_POOLS[level][tier];
+  const selectedTopic = topic || topics[Math.floor(Math.random() * topics.length)];
+  const grammarFocus = grammarFocusMap[level][tier].join(", ");
+  const difficultyHint = DIFFICULTY_HINTS[difficulty];
 
   return JSON.stringify({
     task: "generate_passage",
     level,
+    difficulty,
+    difficulty_instruction: difficultyHint,
     topic: selectedTopic,
     grammar_focus: grammarFocus,
   });
