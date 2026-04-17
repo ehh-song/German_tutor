@@ -12,5 +12,7 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  return <AppShell>{children}</AppShell>;
+  const role = (session.user as { role?: string }).role ?? "USER";
+
+  return <AppShell role={role}>{children}</AppShell>;
 }

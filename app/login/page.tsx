@@ -24,7 +24,11 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password");
+      if (result.error.includes("PENDING_APPROVAL")) {
+        setError("Your account is pending admin approval. Please wait.");
+      } else {
+        setError("Invalid email or password");
+      }
     } else {
       router.push("/languages");
       router.refresh();

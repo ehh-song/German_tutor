@@ -10,7 +10,7 @@ import { SUPPORTED_LANGUAGES } from "@/lib/languages";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children, role = "USER" }: { children: React.ReactNode; role?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lang = searchParams.get("lang") ?? "de";
@@ -111,7 +111,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 space-y-1">
+          {role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 w-full text-sm text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg transition font-medium"
+            >
+              <span>⚙️</span> Admin Panel
+            </Link>
+          )}
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="w-full text-sm text-gray-500 hover:text-red-500 text-left px-4 py-2 rounded-lg hover:bg-red-50 transition"

@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       email,
       name: name || null,
       passwordHash,
+      isActive: false,
       progress: {
         create: {
           currentLevel: "A1",
@@ -37,5 +38,5 @@ export async function POST(request: Request) {
     select: { id: true, email: true, name: true },
   });
 
-  return NextResponse.json(user, { status: 201 });
+  return NextResponse.json({ ...user, pendingApproval: true }, { status: 201 });
 }

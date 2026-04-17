@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +31,25 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/login?registered=1");
+    setSubmitted(true);
+    setLoading(false);
+  }
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
+          <div className="text-5xl mb-4">📬</div>
+          <h2 className="text-2xl font-bold text-indigo-700 mb-2">Account request submitted!</h2>
+          <p className="text-gray-600 mb-6">
+            Your account is pending approval by the admin. You&apos;ll be able to sign in once your account is approved.
+          </p>
+          <Link href="/login" className="text-indigo-600 hover:underline font-medium">
+            Back to Sign In
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

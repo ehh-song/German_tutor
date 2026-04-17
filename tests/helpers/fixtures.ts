@@ -12,6 +12,7 @@ export async function createTestUser(
       email,
       passwordHash,
       name: 'Test Learner',
+      isActive: true,
       progress: {
         create: { language: 'de', currentLevel: 'A1', xp: 0, totalPassages: 0, streakDays: 0 },
       },
