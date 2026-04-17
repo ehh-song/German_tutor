@@ -26,7 +26,7 @@ export function usePassageStream() {
     done: false,
   });
 
-  const generate = useCallback(async (topic?: string) => {
+  const generate = useCallback(async (topic?: string, language = "de") => {
     setState({
       streaming: true,
       text: "",
@@ -43,7 +43,7 @@ export function usePassageStream() {
       const res = await fetch("/api/passages/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic, language }),
       });
 
       if (!res.ok) {

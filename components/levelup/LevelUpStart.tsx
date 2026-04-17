@@ -5,26 +5,31 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   existingTestId: string | null;
+  language?: string;
 }
 
-export default function LevelUpStart({ existingTestId }: Props) {
+export default function LevelUpStart({ existingTestId, language = "de" }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function handleStart() {
     if (existingTestId) {
-      router.push(`/levelup/${existingTestId}`);
+      router.push(`/levelup/${existingTestId}?lang=${language}`);
       return;
     }
 
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/levelup/generate", { method: "POST" });
+    const res = await fetch("/api/levelup/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language }),
+    });
     if (res.ok) {
       const data = await res.json();
-      router.push(`/levelup/${data.id}`);
+      router.push(`/levelup/${data.id}?lang=${language}`);
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error || "Failed to generate test");

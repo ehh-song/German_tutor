@@ -25,6 +25,8 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const language = passage.language ?? "de";
+
   const score = calculateScore(
     answers,
     passage.questions.map((q) => ({ id: q.id, correctAnswer: q.correctAnswer }))
@@ -47,9 +49,10 @@ export async function POST(
   });
 
   const progress = await prisma.userProgress.upsert({
-    where: { userId: session.user.id },
+    where: { userId_language: { userId: session.user.id, language } },
     create: {
       userId: session.user.id,
+      language,
       currentLevel: "A1",
       xp: xpEarned,
       totalPassages: 1,
@@ -89,5 +92,6 @@ export async function POST(
     levelUpAvailable,
     newXP: progress.xp,
     newTotalPassages: progress.totalPassages,
+    language,
   });
 }

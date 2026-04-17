@@ -1,10 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import type { CEFRLevel } from "./levels";
+import type { LanguageCode } from "./languages";
 import {
-  PASSAGE_SYSTEM_PROMPT,
-  LEVEL_UP_TEST_SYSTEM_PROMPT,
-  WORD_TRANSLATION_SYSTEM_PROMPT,
+  getPassageSystemPrompt,
+  getLevelUpTestSystemPrompt,
+  getWordTranslationSystemPrompt,
   buildPassageUserPrompt,
   buildLevelUpTestPrompt,
 } from "./prompts";
@@ -34,15 +35,16 @@ function extractJson(text: string): string {
 export async function* streamPassageGeneration(
   level: CEFRLevel,
   xpProgress: number,
+  language: LanguageCode = "de",
   topic?: string
 ): AsyncGenerator<{ type: "chunk"; text: string } | { type: "done"; data: PassageGeneration }> {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    systemInstruction: PASSAGE_SYSTEM_PROMPT,
+    systemInstruction: getPassageSystemPrompt(language),
   });
 
   const result = await model.generateContentStream(
-    buildPassageUserPrompt(level, xpProgress, topic)
+    buildPassageUserPrompt(level, xpProgress, topic, language)
   );
 
   let fullText = "";
@@ -65,15 +67,16 @@ export async function* streamPassageGeneration(
  */
 export async function generateLevelUpTest(
   fromLevel: CEFRLevel,
-  toLevel: CEFRLevel
+  toLevel: CEFRLevel,
+  language: LanguageCode = "de"
 ): Promise<z.infer<typeof LevelUpTestSchema>> {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    systemInstruction: LEVEL_UP_TEST_SYSTEM_PROMPT,
+    systemInstruction: getLevelUpTestSystemPrompt(language),
   });
 
   const result = await model.generateContent(
-    buildLevelUpTestPrompt(fromLevel, toLevel)
+    buildLevelUpTestPrompt(fromLevel, toLevel, language)
   );
 
   const jsonText = extractJson(result.response.text());
@@ -81,19 +84,20 @@ export async function generateLevelUpTest(
 }
 
 /**
- * Translate a single German word using Gemini 2.0 Flash (fast + cheap).
+ * Translate a single word using Gemini 2.0 Flash (fast + cheap).
  */
 export async function translateWord(
   word: string,
-  context: string
+  context: string,
+  language: LanguageCode = "de"
 ): Promise<WordTranslation> {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    systemInstruction: WORD_TRANSLATION_SYSTEM_PROMPT,
+    systemInstruction: getWordTranslationSystemPrompt(language),
   });
 
   const result = await model.generateContent(
-    `German word/phrase: "${word}"\nPassage context: "${context.slice(0, 200)}"`
+    `Word/phrase: "${word}"\nPassage context: "${context.slice(0, 200)}"`
   );
 
   const jsonText = extractJson(result.response.text());

@@ -14,14 +14,14 @@ const partOfSpeechBadge: Record<string, string> = {
   preposition: "bg-purple-100 text-purple-700",
 };
 
-export default function VocabBook() {
+export default function VocabBook({ language = "de" }: { language?: string }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const { data, mutate } = useSWR<{
     words: VocabWord[];
     total: number;
     totalPages: number;
-  }>(`/api/vocabulary?page=${page}`, fetcher);
+  }>(`/api/vocabulary?page=${page}&lang=${language}`, fetcher);
 
   async function handleDelete(id: string) {
     await fetch(`/api/vocabulary/${id}`, { method: "DELETE" });

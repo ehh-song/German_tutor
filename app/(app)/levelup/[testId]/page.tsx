@@ -8,13 +8,16 @@ import type { CEFRLevel } from "@/lib/levels";
 
 export default async function LevelUpTestPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ testId: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) return null;
 
   const { testId } = await params;
+  const { lang = "de" } = await searchParams;
 
   const test = await prisma.levelUpTest.findFirst({
     where: { id: testId, userId: session.user.id },
@@ -74,7 +77,7 @@ export default async function LevelUpTestPage({
           )}
         </div>
       ) : (
-        <LevelUpTestClient testId={test.id} questions={questions} />
+        <LevelUpTestClient testId={test.id} questions={questions} language={lang} />
       )}
     </div>
   );

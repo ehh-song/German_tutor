@@ -8,6 +8,7 @@ import type { QuestionItem } from "@/types";
 interface Props {
   testId: string;
   questions: QuestionItem[];
+  language?: string;
 }
 
 interface TestResult {
@@ -20,7 +21,7 @@ interface TestResult {
   xpBonus: number;
 }
 
-export default function LevelUpTestClient({ testId, questions }: Props) {
+export default function LevelUpTestClient({ testId, questions, language = "de" }: Props) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -109,7 +110,7 @@ export default function LevelUpTestClient({ testId, questions }: Props) {
               </div>
               <div className="text-green-600 text-sm mb-4">+{result.xpBonus} XP bonus earned!</div>
               <button
-                onClick={() => router.push("/dashboard")}
+                onClick={() => router.push(`/dashboard?lang=${language}`)}
                 className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition"
               >
                 Back to Dashboard
@@ -124,7 +125,7 @@ export default function LevelUpTestClient({ testId, questions }: Props) {
                 You need 70% to advance. Keep completing passages and try again.
               </div>
               <button
-                onClick={() => router.push("/learn")}
+                onClick={() => router.push(`/learn?lang=${language}`)}
                 className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition"
               >
                 Continue Learning

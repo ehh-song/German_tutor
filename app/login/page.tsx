@@ -26,7 +26,7 @@ export default function LoginPage() {
     if (result?.error) {
       setError("Invalid email or password");
     } else {
-      router.push("/dashboard");
+      router.push("/languages");
       router.refresh();
     }
     setLoading(false);
@@ -36,8 +36,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-700">Deutsch Meister</h1>
-          <p className="text-gray-500 mt-2">Learn German with AI</p>
+          <h1 className="text-3xl font-bold text-indigo-700">LinguaMaster</h1>
+          <p className="text-gray-500 mt-2">AI Language Tutor</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

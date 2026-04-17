@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { translateWord } from "@/lib/ai";
 import { XP_VOCAB_SAVE } from "@/lib/xp";
+import { isValidLanguage } from "@/lib/languages";
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -12,16 +13,18 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") ?? "1");
+  const rawLang = searchParams.get("lang") ?? "de";
+  const language = isValidLanguage(rawLang) ? rawLang : "de";
   const pageSize = 20;
 
   const [words, total] = await Promise.all([
     prisma.vocabularyWord.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id, language },
       orderBy: { savedAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
-    prisma.vocabularyWord.count({ where: { userId: session.user.id } }),
+    prisma.vocabularyWord.count({ where: { userId: session.user.id, language } }),
   ]);
 
   return NextResponse.json({
@@ -46,16 +49,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { germanWord, passageId, passageContext, translation, partOfSpeech } =
+  const { germanWord, passageId, passageContext, translation, partOfSpeech, language: rawLang } =
     await request.json();
 
   if (!germanWord || !passageId) {
     return NextResponse.json({ error: "germanWord and passageId required" }, { status: 400 });
   }
 
-  // Check if word already saved for this user
+  // Derive language from the passage itself (most reliable)
+  const passage = await prisma.passage.findFirst({
+    where: { id: passageId, userId: session.user.id },
+    select: { language: true },
+  });
+  const rawLanguage = passage?.language ?? rawLang;
+  const language = isValidLanguage(rawLanguage) ? rawLanguage : ("de" as const);
+
+  // Check if word already saved for this user + language
   const existing = await prisma.vocabularyWord.findFirst({
-    where: { userId: session.user.id, germanWord },
+    where: { userId: session.user.id, language, germanWord },
   });
   if (existing) {
     return NextResponse.json(existing);
@@ -67,7 +78,7 @@ export async function POST(request: Request) {
   let wordPartOfSpeech = partOfSpeech ?? "unknown";
 
   if (!wordTranslation) {
-    const aiTranslation = await translateWord(germanWord, passageContext ?? "");
+    const aiTranslation = await translateWord(germanWord, passageContext ?? "", language);
     wordTranslation = aiTranslation.translation;
     wordExplanation = aiTranslation.explanation;
     wordPartOfSpeech = aiTranslation.partOfSpeech;
@@ -76,6 +87,7 @@ export async function POST(request: Request) {
   const word = await prisma.vocabularyWord.create({
     data: {
       userId: session.user.id,
+      language,
       passageId,
       germanWord,
       translation: wordTranslation,
@@ -86,9 +98,10 @@ export async function POST(request: Request) {
 
   // Award XP for saving a word
   await prisma.userProgress.upsert({
-    where: { userId: session.user.id },
+    where: { userId_language: { userId: session.user.id, language } },
     create: {
       userId: session.user.id,
+      language,
       currentLevel: "A1",
       xp: XP_VOCAB_SAVE,
       totalPassages: 0,

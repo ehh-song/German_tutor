@@ -2,21 +2,27 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isLevelUpAvailable, LEVEL_CONFIG, type CEFRLevel } from "@/lib/levels";
+import { isValidLanguage } from "@/lib/languages";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let progress = await prisma.userProgress.findUnique({
-    where: { userId: session.user.id },
+  const { searchParams } = new URL(request.url);
+  const rawLang = searchParams.get("lang") ?? "de";
+  const language = isValidLanguage(rawLang) ? rawLang : "de";
+
+  let progress = await prisma.userProgress.findFirst({
+    where: { userId: session.user.id, language },
   });
 
   if (!progress) {
     progress = await prisma.userProgress.create({
       data: {
         userId: session.user.id,
+        language,
         currentLevel: "A1",
         xp: 0,
         totalPassages: 0,
@@ -44,5 +50,6 @@ export async function GET() {
     levelUpAvailable,
     xpToNextTest,
     passagesToNextTest,
+    language,
   });
 }

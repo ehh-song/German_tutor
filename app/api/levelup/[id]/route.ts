@@ -88,8 +88,9 @@ export async function POST(
 
   if (passed) {
     // Advance level and award XP bonus
-    await prisma.userProgress.update({
-      where: { userId: session.user.id },
+    const language = test.language ?? "de";
+    await prisma.userProgress.updateMany({
+      where: { userId: session.user.id, language },
       data: {
         currentLevel: test.toLevel as CEFRLevel,
         xp: { increment: XP_LEVEL_UP_BONUS },

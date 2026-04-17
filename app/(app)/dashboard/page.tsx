@@ -1,16 +1,25 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isLevelUpAvailable, LEVEL_CONFIG, type CEFRLevel } from "@/lib/levels";
+import { isValidLanguage, SUPPORTED_LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) return null;
 
+  const { lang: rawLang } = await searchParams;
+  const language = isValidLanguage(rawLang ?? "") ? (rawLang as string) : "de";
+  const langInfo = SUPPORTED_LANGUAGES[language as keyof typeof SUPPORTED_LANGUAGES];
+
   const [progress, recentPassages] = await Promise.all([
-    prisma.userProgress.findUnique({ where: { userId: session.user.id } }),
+    prisma.userProgress.findFirst({ where: { userId: session.user.id, language } }),
     prisma.passage.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id, language },
       orderBy: { createdAt: "desc" },
       take: 5,
       include: { _count: { select: { attempts: true } } },
@@ -27,7 +36,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <span className="text-3xl">{langInfo?.flag}</span>
+        <h2 className="text-2xl font-bold text-gray-800">{langInfo?.name} Dashboard</h2>
+      </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4 mb-8">
@@ -83,7 +95,7 @@ export default async function DashboardPage() {
             </div>
           </div>
           <Link
-            href="/levelup"
+            href={`/levelup?lang=${language}`}
             className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg text-sm transition"
           >
             Take Test
@@ -96,11 +108,11 @@ export default async function DashboardPage() {
         <div>
           <div className="font-bold text-lg">Ready to learn?</div>
           <div className="text-indigo-200 text-sm mt-0.5">
-            Generate a new {level}-level German passage
+            Generate a new {level}-level {langInfo?.name} passage
           </div>
         </div>
         <Link
-          href="/learn"
+          href={`/learn?lang=${language}`}
           className="px-5 py-2.5 bg-white text-indigo-700 font-semibold rounded-lg text-sm hover:bg-indigo-50 transition"
         >
           Start Learning
@@ -115,7 +127,7 @@ export default async function DashboardPage() {
             {recentPassages.map((p) => (
               <Link
                 key={p.id}
-                href={`/learn/${p.id}`}
+                href={`/learn/${p.id}?lang=${language}`}
                 className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition"
               >
                 <div>

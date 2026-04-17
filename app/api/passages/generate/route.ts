@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { streamPassageGeneration } from "@/lib/ai";
 import { LEVEL_CONFIG, type CEFRLevel } from "@/lib/levels";
+import { isValidLanguage } from "@/lib/languages";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -9,16 +10,18 @@ export async function POST(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { topic } = await request.json().catch(() => ({}));
+  const body = await request.json().catch(() => ({}));
+  const { topic } = body as { topic?: string };
+  const rawLang = (body as { language?: string }).language ?? "de";
+  const language = isValidLanguage(rawLang) ? rawLang : "de";
 
-  const progress = await prisma.userProgress.findUnique({
-    where: { userId: session.user.id },
+  const progress = await prisma.userProgress.findFirst({
+    where: { userId: session.user.id, language },
   });
 
   const level = (progress?.currentLevel ?? "A1") as CEFRLevel;
   const xp = progress?.xp ?? 0;
   const xpThreshold = LEVEL_CONFIG[level].xpToUnlockTest ?? 1;
-  // 0.0 ~ 1.0: progress within the current level
   const xpProgress = Math.min(1, xp / xpThreshold);
 
   const userId = session.user.id;
@@ -27,7 +30,7 @@ export async function POST(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of streamPassageGeneration(level, xpProgress, topic)) {
+        for await (const event of streamPassageGeneration(level, xpProgress, language, topic)) {
           if (event.type === "chunk") {
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "chunk", text: event.text })}\n\n`)
@@ -36,6 +39,7 @@ export async function POST(request: Request) {
             const passage = await prisma.passage.create({
               data: {
                 userId,
+                language,
                 level,
                 germanText: event.data.germanText,
                 topic: event.data.topic,
