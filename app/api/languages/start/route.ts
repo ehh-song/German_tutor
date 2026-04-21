@@ -23,16 +23,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Language already started" }, { status: 409 });
   }
 
-  const progress = await prisma.userProgress.create({
-    data: {
-      userId: session.user.id,
-      language,
-      currentLevel: "A1",
-      xp: 0,
-      totalPassages: 0,
-      streakDays: 0,
-    },
-  });
+  const [progress] = await prisma.$transaction([
+    prisma.userProgress.create({
+      data: {
+        userId: session.user.id,
+        language,
+        currentLevel: "A1",
+        xp: 0,
+        totalPassages: 0,
+        streakDays: 0,
+      },
+    }),
+    prisma.user.update({
+      where: { id: session.user.id },
+      data: { selectedLanguage: language },
+    }),
+  ]);
 
   const info = SUPPORTED_LANGUAGES[language];
   return NextResponse.json({

@@ -46,7 +46,7 @@ export default function WordTooltip({ word, passageId, wordListEntry, passageCon
       const res = await fetch("/api/vocabulary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ germanWord: word, passageId, passageContext }),
+        body: JSON.stringify({ word, passageId, passageContext }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -70,7 +70,7 @@ export default function WordTooltip({ word, passageId, wordListEntry, passageCon
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        germanWord: word,
+        word,
         passageId,
         passageContext,
         translation: translation?.translation,

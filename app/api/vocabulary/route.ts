@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     words: words.map((w) => ({
       id: w.id,
-      germanWord: w.germanWord,
+      word: w.word,
       translation: w.translation,
       explanation: w.explanation,
       partOfSpeech: w.partOfSpeech,
@@ -49,11 +49,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { germanWord, passageId, passageContext, translation, partOfSpeech, language: rawLang } =
+  const { word: wordParam, passageId, passageContext, translation, partOfSpeech, language: rawLang } =
     await request.json();
 
-  if (!germanWord || !passageId) {
-    return NextResponse.json({ error: "germanWord and passageId required" }, { status: 400 });
+  if (!wordParam || !passageId) {
+    return NextResponse.json({ error: "word and passageId required" }, { status: 400 });
   }
 
   // Derive language from the passage itself (most reliable)
@@ -66,10 +66,18 @@ export async function POST(request: Request) {
 
   // Check if word already saved for this user + language
   const existing = await prisma.vocabularyWord.findFirst({
-    where: { userId: session.user.id, language, germanWord },
+    where: { userId: session.user.id, language, word: wordParam },
   });
   if (existing) {
-    return NextResponse.json(existing);
+    return NextResponse.json({
+      id: existing.id,
+      word: existing.word,
+      translation: existing.translation,
+      explanation: existing.explanation,
+      partOfSpeech: existing.partOfSpeech,
+      savedAt: existing.savedAt.toISOString(),
+      reviewCount: existing.reviewCount,
+    });
   }
 
   // If translation not provided, use AI to translate
@@ -78,18 +86,18 @@ export async function POST(request: Request) {
   let wordPartOfSpeech = partOfSpeech ?? "unknown";
 
   if (!wordTranslation) {
-    const aiTranslation = await translateWord(germanWord, passageContext ?? "", language);
+    const aiTranslation = await translateWord(wordParam, passageContext ?? "", language);
     wordTranslation = aiTranslation.translation;
     wordExplanation = aiTranslation.explanation;
     wordPartOfSpeech = aiTranslation.partOfSpeech;
   }
 
-  const word = await prisma.vocabularyWord.create({
+  const savedWord = await prisma.vocabularyWord.create({
     data: {
       userId: session.user.id,
       language,
       passageId,
-      germanWord,
+      word: wordParam,
       translation: wordTranslation,
       explanation: wordExplanation,
       partOfSpeech: wordPartOfSpeech,
@@ -110,12 +118,12 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({
-    id: word.id,
-    germanWord: word.germanWord,
-    translation: word.translation,
-    explanation: word.explanation,
-    partOfSpeech: word.partOfSpeech,
-    savedAt: word.savedAt.toISOString(),
-    reviewCount: word.reviewCount,
+    id: savedWord.id,
+    word: savedWord.word,
+    translation: savedWord.translation,
+    explanation: savedWord.explanation,
+    partOfSpeech: savedWord.partOfSpeech,
+    savedAt: savedWord.savedAt.toISOString(),
+    reviewCount: savedWord.reviewCount,
   });
 }

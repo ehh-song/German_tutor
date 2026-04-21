@@ -55,12 +55,19 @@ export const QuestionSchema = preprocessed(
 
 export const PassageGenerationSchema = preprocessed(
   z.object({
-    germanText: z.string(),
+    passageText: z.string().optional(),
+    germanText: z.string().optional(), // legacy field name from AI prompt
     topic: z.string(),
     grammarFocus: z.string(),
     questions: z.array(QuestionSchema).min(3).transform((qs) => qs.slice(0, 5)),
     wordList: z.array(WordSchema).default([]),
-  })
+  }).transform((data) => ({
+    passageText: data.passageText ?? data.germanText ?? "",
+    topic: data.topic,
+    grammarFocus: data.grammarFocus,
+    questions: data.questions,
+    wordList: data.wordList,
+  }))
 );
 
 export const LevelUpTestSchema = preprocessed(
@@ -80,7 +87,7 @@ export const WordTranslationSchema = preprocessed(
   })
 );
 
-export type PassageGeneration = z.infer<typeof PassageGenerationSchema>;
+export type PassageGeneration = z.infer<typeof PassageGenerationSchema>; // has passageText field
 export type QuestionData = z.infer<typeof QuestionSchema>;
 export type WordData = z.infer<typeof WordSchema>;
 export type WordTranslation = z.infer<typeof WordTranslationSchema>;

@@ -82,7 +82,7 @@ export function usePassageStream() {
                 ...s,
                 streaming: false,
                 done: true,
-                text: event.germanText ?? s.text,
+                text: event.passageText ?? s.text,
                 passageId: event.passageId,
                 topic: event.topic,
                 grammarFocus: event.grammarFocus,

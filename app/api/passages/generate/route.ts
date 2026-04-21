@@ -41,7 +41,7 @@ export async function POST(request: Request) {
                 userId,
                 language,
                 level,
-                germanText: event.data.germanText,
+                text: event.data.passageText,
                 topic: event.data.topic,
                 grammarFocus: event.data.grammarFocus,
                 wordListJson: JSON.stringify(event.data.wordList),
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
                 `data: ${JSON.stringify({
                   type: "done",
                   passageId: passage.id,
-                  germanText: passage.germanText,
+                  passageText: passage.text,
                   topic: passage.topic,
                   grammarFocus: passage.grammarFocus,
                   wordList: event.data.wordList,

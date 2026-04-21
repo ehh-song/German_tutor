@@ -47,7 +47,7 @@ export default async function PassagePage({
 
       <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
         <PassageReader
-          text={passage.germanText}
+          text={passage.text}
           passageId={passage.id}
           wordList={wordList}
         />

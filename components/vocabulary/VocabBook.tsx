@@ -30,7 +30,7 @@ export default function VocabBook({ language = "de" }: { language?: string }) {
 
   const filtered = data?.words.filter((w) =>
     search
-      ? w.germanWord.toLowerCase().includes(search.toLowerCase()) ||
+      ? w.word.toLowerCase().includes(search.toLowerCase()) ||
         w.translation.toLowerCase().includes(search.toLowerCase())
       : true
   );
@@ -69,7 +69,7 @@ export default function VocabBook({ language = "de" }: { language?: string }) {
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-gray-900">{word.germanWord}</span>
+                    <span className="font-bold text-gray-900">{word.word}</span>
                     {word.partOfSpeech && (
                       <span
                         className={`text-xs px-1.5 py-0.5 rounded-full ${

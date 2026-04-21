@@ -27,7 +27,7 @@ export async function GET(
   return NextResponse.json({
     id: passage.id,
     level: passage.level,
-    germanText: passage.germanText,
+    text: passage.text,
     topic: passage.topic,
     grammarFocus: passage.grammarFocus,
     wordList: JSON.parse(passage.wordListJson),
