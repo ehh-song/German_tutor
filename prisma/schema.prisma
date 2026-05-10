@@ -10,13 +10,17 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(cuid())
-  email            String   @unique
+  id               String    @id @default(cuid())
+  email            String    @unique
   name             String?
   passwordHash     String
-  selectedLanguage String   @default("")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  role             String    @default("USER")
+  isActive         Boolean   @default(false)
+  approvedAt       DateTime?
+  lastLoginAt      DateTime?
+  selectedLanguage String    @default("")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   progress        UserProgress[]
   passages        Passage[]
